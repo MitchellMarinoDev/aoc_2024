@@ -10,11 +10,18 @@ mod solutions;
 /// The puzzle day that you are currently on.
 ///
 /// You should increment this constant as you go, in order for this to work properly.
-const CURRENT_DAY: usize = 3;
+const CURRENT_DAY: usize = 4;
 
 fn main() {
     let args = Args::parse();
     args.apply_color_option();
+
+    simple_logger::SimpleLogger::new()
+        .with_level(log::LevelFilter::Info)
+        .env()
+        .init()
+        .unwrap();
+
     println!("{}", args.header());
     check_input_dir(&args);
 
