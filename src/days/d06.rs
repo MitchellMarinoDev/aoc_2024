@@ -142,20 +142,23 @@ pub fn solve(input: String) -> (String, String) {
 
     // Part 2
     let mut loop_count = 0;
-    for (x_location, y_location) in visited_locations {
-        // try adding an object to all visited locations to see if it causes a loop
-        let mut modified_map = map.clone();
-        modified_map[y_location][x_location] = Tile::Obsticle;
-        if check_for_loop(modified_map, starting_guard_pos) {
-            loop_count += 1;
+    for y_location in 0..map.len() {
+        for x_location in 0..map[y_location].len() {
+            // try adding an object to all visited locations to see if it causes a loop
+            let mut modified_map = map.clone();
+            modified_map[y_location][x_location] = Tile::Obsticle;
+            if check_for_loop(modified_map, starting_guard_pos) {
+                loop_count += 1;
+            }
         }
     }
 
-    (location_count.to_string(), "".into())
+    (location_count.to_string(), loop_count.to_string())
 }
 
-fn check_for_loop(map: Vec<Vec<Tile>>, guard_pos: (isize, isize)) -> bool {
-    map[guard_pos.1][guard_pos.0] = Tile::Visited(1 << (Direction::Up));
+/// Check if the given map causes the guard to travel in a loop and never exit.
+fn check_for_loop(mut map: Vec<Vec<Tile>>, mut guard_pos: (isize, isize)) -> bool {
+    map[guard_pos.1 as usize][guard_pos.0 as usize] = Tile::Visited(1 << (Direction::Up as u8));
 
     let mut dir = Direction::Up;
     loop {
@@ -164,22 +167,32 @@ fn check_for_loop(map: Vec<Vec<Tile>>, guard_pos: (isize, isize)) -> bool {
             return false;
         }
 
-        let tile = map[next_guard_pos.1 as usize][next_guard_pos.0 as usize];
-        match tile {
+        let tile = map
+            .get_mut(next_guard_pos.1 as usize)
+            .unwrap()
+            .get_mut(next_guard_pos.0 as usize)
+            .unwrap();
+        match *tile {
             Tile::Obsticle => {
                 dir = dir.rotate();
+
                 // do not walk forward
                 continue;
             }
             Tile::GuardStarting => {
                 panic!("`GuardStarting` tile should have been replaced by a `Visited`")
             }
-            Tile::Visited(dir_mas) => {
-                todo!();
+            Tile::Visited(dir_mask) => {
+                let new_dir_mask = dir_mask | (1 << (dir as u8));
+                if dir_mask == new_dir_mask {
+                    // loop!
+                    return true;
+                } else {
+                    *tile = Tile::Visited(new_dir_mask);
+                }
             }
             Tile::Empty => {
-                map[next_guard_pos.1 as usize][next_guard_pos.0 as usize] =
-                    Tile::Visited(1 << (dir as u8));
+                *tile = Tile::Visited(1 << (dir as u8));
             }
         }
 
