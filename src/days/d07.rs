@@ -18,6 +18,7 @@ struct Equation {
 }
 
 pub fn solve(input: String) -> (String, String) {
+    // parse
     let equations: Vec<_> = input
         .lines()
         .map(|l| {
@@ -52,6 +53,7 @@ pub fn solve(input: String) -> (String, String) {
         }
     }
 
+    // part 2
     let mut count2 = 0;
     for Equation { result, inputs } in equations.iter() {
         let n_op = inputs.len() - 1;
